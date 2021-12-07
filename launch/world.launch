@@ -1,0 +1,60 @@
+<launch>
+  <!--Variables-->
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="first_tb3"  default="tb3_0"/>
+
+  <arg name="first_tb3_x_pos" default="0.0"/>
+  <arg name="first_tb3_y_pos" default="1.0"/>
+  <arg name="first_tb3_z_pos" default="0.0"/>
+  <arg name="first_tb3_yaw"   default="0.0"/>
+
+
+
+
+
+
+
+
+<!--Simulation Environment-->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find multi_robot_challenge)/worlds/dat160_w4.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+
+	<!--First robot-->
+
+    <param name="robot_description" command="$(find xacro)/xacro $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="tf_prefix" value="$(arg first_tb3)" />
+    </node>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_tb3) -x $(arg first_tb3_x_pos) -y $(arg first_tb3_y_pos) -z $(arg first_tb3_z_pos) -Y $(arg first_tb3_yaw) -param robot_description" />
+
+
+ <!--Navigation-->
+  <include file="$(find multi_robot_challenge)/launch/move.launch">
+    <arg name="robot_namespace_0" value="tb3_0" />
+  </include>
+
+ <!--AR Track-->
+  <include file="$(find multi_robot_challenge)/launch/ar_track.launch">
+    <!-- <arg name="robot_namespace" value="" /> -->
+  </include>
+
+
+  <!--Rviz-->
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find multi_robot_challenge)/rviz/turtlebot3_slam.rviz"/>
+  </group>
+
+</launch>
